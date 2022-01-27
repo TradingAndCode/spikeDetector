@@ -1,5 +1,5 @@
 
-void CloseByDuration(int positionIndex) // close trades opened longer than sec seconds
+void CloseOrder(int positionIndex) // close trades opened longer than sec seconds
 {
   bool success = false;
   int err = 0;
@@ -51,27 +51,88 @@ void CloseByDuration(int positionIndex) // close trades opened longer than sec s
     myAlert("order", "Orders closed by duration: " + Symbol() + " Magic #" + IntegerToString(MagicNumber));
 }
 
-void MonitorTrades(int sec)
+void MonitorRevenge()
 {
   if (!TerminalInfoInteger(TERMINAL_TRADE_ALLOWED) || !MQLInfoInteger(MQL_TRADE_ALLOWED))
     return;
 
   int total = PositionsTotal();
+  double pnl = 0;
   for (int i = 0; i < total; i++)
   {
     if (PositionGetTicket(i) <= 0)
       continue;
-    if (PositionGetInteger(POSITION_MAGIC) != MagicNumber || PositionGetString(POSITION_SYMBOL) != Symbol() || PositionGetInteger(POSITION_TIME) + sec > TimeCurrent())
+    if (PositionGetInteger(POSITION_MAGIC) != MagicNumber || PositionGetString(POSITION_SYMBOL) != Symbol())
+      continue;
+
+    pnl += PositionGetDouble(POSITION_PROFIT);
+    Print("current global profit ", pnl);
+  }
+
+  if (pnl >= 0)
+  {
+    // close all
+    for (int i = 0; i < total; i++)
+    {
+      if (PositionGetTicket(i) <= 0)
+        continue;
+      if (PositionGetInteger(POSITION_MAGIC) != MagicNumber || PositionGetString(POSITION_SYMBOL) != Symbol())
+        continue;
+      // CloseOrder(i);
+      trade.PositionClose(PositionGetTicket(i));
+      trade.PrintResult();
+    }
+    Print("all trades close");
+    // reset revenge
+    revengeMode = false;
+    lastTradeLot = 0;
+    TradeSize = tradeVolume;
+    lastMaxLot = 0;
+  }
+  else
+  {
+    revengeMode = true;
+    lastTradeLot = NormalizeDouble(PositionGetDouble(POSITION_VOLUME), LotDigits);
+  }
+}
+
+void MonitorTrades()
+{
+
+  if (!TerminalInfoInteger(TERMINAL_TRADE_ALLOWED) || !MQLInfoInteger(MQL_TRADE_ALLOWED))
+    return;
+
+  int total = PositionsTotal();
+
+  for (int i = 0; i < total; i++)
+  {
+    if (PositionGetTicket(i) <= 0)
+      continue;
+
+    if (PositionGetInteger(POSITION_MAGIC) != MagicNumber || PositionGetString(POSITION_SYMBOL) != Symbol() ||
+        //
+        PositionGetInteger(POSITION_TIME) + (PeriodSeconds()) > TimeCurrent() // more than one candle at least
+                                                                              //
+    )
       continue;
 
     if (PositionGetDouble(POSITION_PROFIT) > NormalizeDouble(0, LotDigits))
     {
       Print("trade in profit of ", PositionGetDouble(POSITION_PROFIT));
-      CloseByDuration(i);
+      if (PositionGetInteger(POSITION_TIME) + (MaxTradeDurationBars * PeriodSeconds()) <= TimeCurrent())
+      {
+        CloseOrder(i);
+      }
     }
     else
     {
       revengeMode = true;
     }
   }
+
+  if (revengeMode)
+  {
+    lastTradeLot = NormalizeDouble(PositionGetDouble(POSITION_VOLUME), LotDigits);
+  }
+
 }

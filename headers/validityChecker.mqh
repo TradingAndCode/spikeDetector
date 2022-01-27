@@ -3,9 +3,11 @@
 #property link "https://stevennkeneng.com"
 #property strict
 
+//3170564
+//3542835 - hermann
+//20323508 - darlin
 
-
-if (TimeLocal() > D'01.03.2022' && Password != "HolyGrail")
+if (TimeLocal() > D'01.04.2022' || AccountInfoInteger(ACCOUNT_LOGIN) != 3170564 )
 {
    MessageBox("This File Has Expired! Please purchase the password from Steven nkeneng!", "Expired File");
    Print("This File Has Expired! Please purchase the password from Steven nkeneng!", "Expired File");
