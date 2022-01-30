@@ -78,9 +78,7 @@ void MonitorRevenge()
         continue;
       if (PositionGetInteger(POSITION_MAGIC) != MagicNumber || PositionGetString(POSITION_SYMBOL) != Symbol())
         continue;
-      // CloseOrder(i);
-      trade.PositionClose(PositionGetTicket(i));
-      trade.PrintResult();
+      CloseOrder(i);
     }
     Print("all trades close");
     // reset revenge
@@ -134,5 +132,4 @@ void MonitorTrades()
   {
     lastTradeLot = NormalizeDouble(PositionGetDouble(POSITION_VOLUME), LotDigits);
   }
-
 }

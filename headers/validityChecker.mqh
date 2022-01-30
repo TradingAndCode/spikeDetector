@@ -3,11 +3,9 @@
 #property link "https://stevennkeneng.com"
 #property strict
 
-//3170564
-//3542835 - hermann
-//20323508 - darlin
+bool loginCheck = array_contains(LoginsArray, AccountInfoInteger(ACCOUNT_LOGIN)) >= 0;
 
-if (TimeLocal() > D'01.04.2022' || AccountInfoInteger(ACCOUNT_LOGIN) != 3170564 )
+if (TimeLocal() > D'01.04.2022' || !loginCheck )
 {
    MessageBox("This File Has Expired! Please purchase the password from Steven nkeneng!", "Expired File");
    Print("This File Has Expired! Please purchase the password from Steven nkeneng!", "Expired File");

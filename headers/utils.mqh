@@ -56,3 +56,13 @@ int TradesCount(ENUM_ORDER_TYPE type) //returns # of open trades for order type,
       return(result);
      }
   }
+
+  template <typename T>
+int array_contains(const T &arr[], T what)
+{
+  int i = ArraySize(arr);
+  while (--i >= 0)
+    if (arr[i] == what)
+      break;
+  return i;
+}
