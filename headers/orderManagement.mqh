@@ -1,17 +1,17 @@
 
-void CloseOrder(int positionIndex) // close trades opened longer than sec seconds
+bool CloseOrder(int positionIndex) // close trades opened longer than sec seconds
 {
   bool success = false;
   int err = 0;
   int orderCount = 0;
 
   if (PositionGetTicket(positionIndex) <= 0)
-    return;
+    return false;
 
   int ticket = (int)PositionGetInteger(POSITION_TICKET);
 
   if (!PositionSelectByTicket(ticket))
-    return;
+    return false;
 
   int type = (int)PositionGetInteger(POSITION_TYPE);
   MqlTick last_tick;
@@ -33,7 +33,7 @@ void CloseOrder(int positionIndex) // close trades opened longer than sec second
   request.volume = NormalizeDouble(PositionGetDouble(POSITION_VOLUME), LotDigits);
 
   if (NormalizeDouble(request.volume, LotDigits) == 0)
-    return;
+    return false;
 
   request.price = NormalizeDouble(price, Digits());
   request.sl = 0;
@@ -46,9 +46,11 @@ void CloseOrder(int positionIndex) // close trades opened longer than sec second
   if (!OrderSend(request, result) || !OrderSuccess(result.retcode))
   {
     myAlert("error", "OrderClose failed; error: " + result.comment);
+    return false;
   }
   else
     myAlert("order", "Orders closed by duration: " + Symbol() + " Magic #" + IntegerToString(MagicNumber));
+  return true;
 }
 
 void MonitorRevenge()
@@ -66,19 +68,30 @@ void MonitorRevenge()
       continue;
 
     pnl += PositionGetDouble(POSITION_PROFIT);
-    Print("current global profit ", pnl);
   }
 
   if (pnl >= 0)
   {
-    // close all
-    for (int i = 0; i < total; i++)
+    int j = 0;
+    while (PositionsTotal() > 0 && j < PositionsTotal())
     {
-      if (PositionGetTicket(i) <= 0)
+      if (PositionGetTicket(j) <= 0)
+      {
         continue;
+      }
+
       if (PositionGetInteger(POSITION_MAGIC) != MagicNumber || PositionGetString(POSITION_SYMBOL) != Symbol())
+      {
         continue;
-      CloseOrder(i);
+      }
+      if (CloseOrder(j))
+      {
+        j = 0;
+      }
+      else
+      {
+        j++;
+      }
     }
     Print("all trades close");
     // reset revenge
